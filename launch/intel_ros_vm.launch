@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find intel_ros_vm)/launch/vel_center.launch" />
+  <include file="$(find intel_ros_vm)/launch/cmd_center.launch" />
+  <include file="$(find intel_ros_vm)/launch/follower2.launch" />
+</launch>

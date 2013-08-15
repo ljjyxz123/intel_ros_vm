@@ -1,0 +1,16 @@
+<!-- Yuanbo She, 2013.8.13 -->
+<launch>
+  <node pkg="intel_ros_vm" name="intel_ros_follower" type="follower">
+    <param name="paused" type="bool" value="false" />
+    <param name="minX" type="int" value="80" />
+    <param name="maxX" type="int" value="240" />
+    <param name="minY" type="int" value="40" />
+    <param name="maxY" type="int" value="200" />
+    <param name="goalZ" type="int" value="600" />
+    <param name="maxZ" type="int" value="980" />
+    <param name="minPoints" type="int" value="1000" />
+    <param name="maxLinearSpeed" type="double" value="0.3" />
+    <param name="maxAngularSpeed" type="double" value="1.0" />
+    <param name="slowDownRate" type="double" value="0.8" />
+  </node>
+</launch>
