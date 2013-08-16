@@ -2,9 +2,9 @@
 <launch>
   <node pkg="intel_ros_vm" name="vel_center" type="vel_center" output="screen" >
     <param name="minLinearSpeed" type="double" value="0.03" />
-    <param name="minAngularSpeed" type="double" value="0.15" />
+    <param name="minAngularSpeed" type="double" value="0.05" />
     <param name="maxLinearSpeed" type="double" value="0.5" />
-    <param name="maxAngularSpeed" type="double" value="2.5" />
+    <param name="maxAngularSpeed" type="double" value="3.0" />
     <param name="minAdjustLinear" type="double" value="0.02" />
     <param name="minAdjustAngular" type="double" value="0.04" />
     <param name="maxAdjustLinear" type="double" value="0.4" />
@@ -12,7 +12,7 @@
     <!-- default 0.25 -->
     <param name="linearAccelerate" type="double" value="0.75" />
     <!-- default 1 -->
-    <param name="angularAccelerate" type="double" value="3" />
+    <param name="angularAccelerate" type="double" value="4" />
     <param name="rate" type="int" value="10" />
   </node>
 </launch>

@@ -68,9 +68,7 @@ include_directories(
 )
 
 ## Declare a cpp library
-# add_library(intel_ros_vm
-#   src/${PROJECT_NAME}/intel_ros_vm.cpp
-# )
+add_library(csvparser src/csvparser.cpp)
 
 ## Declare a cpp executable
 # add_executable(intel_ros_vm_node src/intel_ros_vm_node.cpp)
@@ -91,7 +89,7 @@ add_executable(tester src/tester.cpp)
 target_link_libraries(follower ${catkin_LIBRARIES})
 target_link_libraries(follower2 ${catkin_LIBRARIES})
 target_link_libraries(vel_center ${catkin_LIBRARIES})
-target_link_libraries(cmd_center ${catkin_LIBRARIES})
+target_link_libraries(cmd_center csvparser ${catkin_LIBRARIES})
 target_link_libraries(tester ${catkin_LIBRARIES})
 
 #############

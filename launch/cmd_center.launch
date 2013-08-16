@@ -7,5 +7,6 @@
     <param name="angularSpeed" type="double" value="0.2" />
     <param name="linearStep" type="double" value="0.1" />
     <param name="author" type="string" value="center" />
+    <param name="cmd_csv_path" type="string" value="$(find intel_ros_vm)/include/commands.csv" />
   </node>
 </launch>

@@ -1,15 +1,15 @@
 <!-- Yuanbo She, 2013.8.13 -->
 <launch>
   <node pkg="intel_ros_vm" name="intel_ros_follower2" type="follower2" output="screen" >
-    <param name="paused" type="bool" value="false" />
-    <param name="minX" type="int" value="80" />
-    <param name="maxX" type="int" value="240" />
-    <param name="minY" type="int" value="40" />
-    <param name="maxY" type="int" value="200" />
-    <param name="goalZ" type="int" value="600" />
-    <param name="maxZ" type="int" value="980" />
+    <param name="paused" type="bool" value="true" />
+    <param name="minX" type="int" value="60" />
+    <param name="maxX" type="int" value="260" />
+    <param name="minY" type="int" value="0" />
+    <param name="maxY" type="int" value="240" />
+    <param name="goalZ" type="int" value="550" />
+    <param name="maxZ" type="int" value="800" />
     <param name="minPoints" type="int" value="1000" />
-    <param name="linearRespRate" type="double" value="1.0" />
-    <param name="angularRespRate" type="double" value="1.0" />
+    <param name="linearRespRate" type="double" value="1.2" />
+    <param name="angularRespRate" type="double" value="1.6" />
   </node>
 </launch>

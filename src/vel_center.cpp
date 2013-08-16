@@ -155,7 +155,7 @@ int main(int argc, char **argv)
     cmdVel.linear.x = linearSpeed;
     cmdVel.angular.z = angularSpeed;
     cmdVelPub.publish(cmdVel);
-    ROS_INFO("linear: [%f] angular: [%f]", linearSpeed, angularSpeed);
+    //ROS_INFO("linear: [%f] angular: [%f]", linearSpeed, angularSpeed);
 
     ros::spinOnce();
     loopRate.sleep();
