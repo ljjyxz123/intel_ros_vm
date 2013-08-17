@@ -43,9 +43,6 @@ void commandCallback(const std_msgs::String::ConstPtr& msg)
 
 void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
-  if (paused)
-    return;
-
   // convert sensor_msgs/Image to Mat
   cv_bridge::CvImagePtr cvImgPtr;
   Mat_<uint16_t> depthImg;
@@ -147,6 +144,10 @@ void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
   text = "angular: ";
   text.append(boost::lexical_cast<string>(angularSpeed));
   putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
+  pos.y += 20;
+  text = "time: ";
+  text.append(boost::lexical_cast<string>(ros::Time::now()));
+  putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
 
   if (isViewVideo)
   {
@@ -157,6 +158,8 @@ void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
     depthWriter << depthColorImg;
 
   // pub message
+  if (paused)
+    return;
   geometry_msgs::Twist moveCmd;
   moveCmd.linear.x = linearSpeed;
   moveCmd.angular.z = angularSpeed;
@@ -177,6 +180,14 @@ void rgbCallback(const sensor_msgs::Image::ConstPtr& msg)
     ROS_ERROR("cv_bridge exception: %s", e.what());
   }
 
+  // put time
+  Point pos(20, 40);
+  Scalar textColor(0, 0, 255);
+  string text("time: ");
+  text.append(boost::lexical_cast<string>(ros::Time::now()));
+  putText(rgbImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
+
+  // display or save video
   if (isViewVideo)
   {
     imshow("color image", rgbImg);

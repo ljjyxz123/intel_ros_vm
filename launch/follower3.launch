@@ -12,8 +12,8 @@
     <param name="angularRespRate" type="double" value="1.0" />
     <param name="isViewVideo" type="bool" value="true" />
     <param name="isSaveVideo" type="bool" value="true" />
-    <param name="histVideoPath" type="bool" value="hist.avi" />
-    <param name="depthVideoPath" type="bool" value="depth.avi" />
-    <param name="rgbVideoPath" type="bool" value="rgb.avi" />
+    <param name="histVideoPath" type="string" value="hist.avi" />
+    <param name="depthVideoPath" type="string" value="depth.avi" />
+    <param name="rgbVideoPath" type="string" value="rgb.avi" />
   </node>
 </launch>
