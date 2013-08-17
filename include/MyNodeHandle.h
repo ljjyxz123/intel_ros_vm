@@ -18,6 +18,19 @@ private:
 public:
   MyNodeHandle(){};
   virtual ~MyNodeHandle(){};
+
+  std::string getParamEx(const std::string& key, const char* val)
+  {
+    std::string rv;
+    if (!NodeHandle::getParam(key, rv))
+    {
+      ROS_WARN("Param [%s] not found.", key.c_str());
+      rv = val;
+    }
+    ROS_INFO("Set param [%s] to [%s]", key.c_str(), rv.c_str());
+    return rv;
+  }
+
   std::string getParamEx(const std::string& key, std::string val)
   {
     std::string rv;

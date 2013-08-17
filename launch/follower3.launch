@@ -1,0 +1,19 @@
+<!-- Yuanbo She, 2013.8.13 -->
+<launch>
+  <node pkg="intel_ros_vm" name="follower3" type="follower3" output="screen" >
+    <param name="paused" type="bool" value="true" />
+    <param name="maxLinear" type="double" value="0.5" />
+    <param name="maxAngular" type="double" value="2.0" />
+    <param name="goalZ" type="int" value="600" />
+    <param name="maxZ" type="int" value="900" />
+    <param name="maxWeight" type="double" value="10.0" />
+    <param name="minPoints" type="int" value="1000" />
+    <param name="linearRespRate" type="double" value="1.0" />
+    <param name="angularRespRate" type="double" value="1.0" />
+    <param name="isViewVideo" type="bool" value="true" />
+    <param name="isSaveVideo" type="bool" value="true" />
+    <param name="histVideoPath" type="bool" value="hist.avi" />
+    <param name="depthVideoPath" type="bool" value="depth.avi" />
+    <param name="rgbVideoPath" type="bool" value="rgb.avi" />
+  </node>
+</launch>

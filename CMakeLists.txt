@@ -4,7 +4,7 @@ project(intel_ros_vm)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp rospy sensor_msgs std_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp rospy sensor_msgs std_msgs cv_bridge)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -69,14 +69,16 @@ include_directories(
 
 ## Declare a cpp library
 add_library(csvparser src/csvparser.cpp)
+add_library(Utility src/Utility.cpp)
 
 ## Declare a cpp executable
 # add_executable(intel_ros_vm_node src/intel_ros_vm_node.cpp)
-add_executable(follower src/follower.cpp)
-add_executable(follower2 src/follower2.cpp)
-add_executable(vel_center src/vel_center.cpp)
-add_executable(cmd_center src/cmd_center.cpp)
-add_executable(tester src/tester.cpp)
+add_executable(follower node/follower.cpp)
+add_executable(follower2 node/follower2.cpp)
+add_executable(follower3 node/follower3.cpp)
+add_executable(vel_center node/vel_center.cpp)
+add_executable(cmd_center node/cmd_center.cpp)
+add_executable(tester node/tester.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -88,6 +90,7 @@ add_executable(tester src/tester.cpp)
 # )
 target_link_libraries(follower ${catkin_LIBRARIES})
 target_link_libraries(follower2 ${catkin_LIBRARIES})
+target_link_libraries(follower3 Utility ${catkin_LIBRARIES})
 target_link_libraries(vel_center ${catkin_LIBRARIES})
 target_link_libraries(cmd_center csvparser ${catkin_LIBRARIES})
 target_link_libraries(tester ${catkin_LIBRARIES})
