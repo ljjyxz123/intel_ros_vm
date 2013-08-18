@@ -61,109 +61,116 @@ void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
   int rows = depthImg.rows;
   int cols = depthImg.cols;
 
-  // calc histgram
-  float range[2] = {0, maxZ};
-  vector<int> hist = util.calcHist(depthImg, histSize.width / 2, range);
-  Mat histogram = util.drawHist(hist, histSize.height, 2);
-  if (isViewVideo)
-    imshow("hist", histogram);
-  if (isSaveVideo)
+  try
   {
-    cvtColor(histogram, histogram, CV_GRAY2BGR);
-    histWriter << histogram;
-  }
-
-  // weight
-  int maxRange = maxZ;
-  Mat_<float> wMat(rows, cols); // weight mat
-  wMat.setTo(0);
-  float wSum = 0;
-  double xSum, ySum, zSum;
-  xSum = ySum = zSum = 0;
-  int pointsSum = 0; // points sum which in the range
-  for (int i = 0; i < rows; i++)
-  {
-    uint16_t* pDepthRow = depthImg.ptr<uint16_t>(i);
-    float* pwMatRow = wMat.ptr<float>(i);
-    for (int j = 0; j < cols; j++)
+    // calc histgram
+    float range[2] = {0, maxZ};
+    vector<int> hist = util.calcHist(depthImg, histSize.width / 2, range);
+    Mat histogram = util.drawHist(hist, histSize.height, 2);
+    if (isViewVideo)
+      imshow("hist", histogram);
+    if (isSaveVideo)
     {
-      int z = pDepthRow[j]; // depth of current point
-      double w = 0; // weight of current point
-      if (z < maxRange) // if z in the range, calc the w
+      cvtColor(histogram, histogram, CV_GRAY2BGR);
+      histWriter << histogram;
+    }
+
+    // weight
+    int maxRange = maxZ;
+    Mat_<float> wMat(rows, cols); // weight mat
+    wMat.setTo(0);
+    float wSum = 0;
+    double xSum, ySum, zSum;
+    xSum = ySum = zSum = 0;
+    int pointsSum = 0; // points sum which in the range
+    for (int i = 0; i < rows; i++)
+    {
+      uint16_t* pDepthRow = depthImg.ptr<uint16_t>(i);
+      float* pwMatRow = wMat.ptr<float>(i);
+      for (int j = 0; j < cols; j++)
       {
-        w = (1 - (double)pDepthRow[j] / maxRange) * 10;
-        pwMatRow[j] = w;
-        wSum += w;
-        xSum += j * w;
-        ySum += i * w;
-        zSum += z * w;
-        pointsSum++;
+        int z = pDepthRow[j]; // depth of current point
+        double w = 0; // weight of current point
+        if (z < maxRange) // if z in the range, calc the w
+        {
+          w = (1 - (double)pDepthRow[j] / maxRange) * 10;
+          pwMatRow[j] = w;
+          wSum += w;
+          xSum += j * w;
+          ySum += i * w;
+          zSum += z * w;
+          pointsSum++;
+        }
       }
     }
+
+    // draw depth color image
+    bool channals[3] = {true, false, false};
+    Mat depthColorImg = util.depth2Color(depthImg, 1200, channals);
+
+    // draw depth color image advance
+    float depthRange[2] = {0, 900};
+    bool discard[2] = {false, true};
+    bool depthChannals[3] = {false, false, true};
+    util.depth2Color(depthImg, depthColorImg, depthRange, discard, depthChannals);
+
+    // control
+    float centerX = cols / 2;
+    float avX, avY, avZ;
+    if (pointsSum > minPoints)
+    {
+      avX = xSum / wSum;
+      avY = ySum / wSum;
+      avZ = zSum / wSum;
+      float linearBias = avZ - goalZ;
+      float angularBias = centerX - avX;
+
+      linearSpeed = linearBias > 0 ? linearBias / (maxRange - goalZ) * maxLinear : linearBias / goalZ * maxLinear;
+      angularSpeed = angularBias * 2 / cols * maxAngular;
+
+      linearSpeed *= linearRespRate;
+      angularSpeed *= angularRespRate;
+
+      Point center((int)avX, (int)avY);
+      circle(depthColorImg, center, 6, Scalar(0, 255, 0), -1);
+    }
+
+    // put text info
+    resize(depthColorImg, depthColorImg, depthSize);
+    Point pos(20, 40);
+    Scalar textColor(100, 100, 0);
+    string text("linear: ");
+    text.append(boost::lexical_cast<string>(linearSpeed));
+    putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
+    pos.y += 20;
+    text = "angular: ";
+    text.append(boost::lexical_cast<string>(angularSpeed));
+    putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
+    pos.y += 20;
+    text = "time: ";
+    text.append(boost::lexical_cast<string>(ros::Time::now()));
+    putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
+
+    if (isViewVideo)
+    {
+      imshow("center", depthColorImg);
+      waitKey(10);
+    }
+    if (isSaveVideo)
+      depthWriter << depthColorImg;
+
+    // pub message
+    if (paused)
+      return;
+    geometry_msgs::Twist moveCmd;
+    moveCmd.linear.x = linearSpeed;
+    moveCmd.angular.z = angularSpeed;
+    cmdVelPub.publish(moveCmd);
   }
-
-  // draw depth color image
-  bool channals[3] = {true, false, false};
-  Mat depthColorImg = util.depth2Color(depthImg, 1200, channals);
-
-  // draw depth color image advance
-  float depthRange[2] = {0, 900};
-  bool discard[2] = {false, true};
-  bool depthChannals[3] = {false, false, true};
-  util.depth2Color(depthImg, depthColorImg, depthRange, discard, depthChannals);
-
-  // control
-  float centerX = cols / 2;
-  float avX, avY, avZ;
-  if (pointsSum > minPoints)
+  catch (Exception e)
   {
-    avX = xSum / wSum;
-    avY = ySum / wSum;
-    avZ = zSum / wSum;
-    float linearBias = avZ - goalZ;
-    float angularBias = centerX - avX;
-
-    linearSpeed = linearBias > 0 ? linearBias / (maxRange - goalZ) * maxLinear : linearBias / goalZ * maxLinear;
-    angularSpeed = angularBias * 2 / cols * maxAngular;
-
-    linearSpeed *= linearRespRate;
-    angularSpeed *= angularRespRate;
-
-    Point center((int)avX, (int)avY);
-    circle(depthColorImg,center,6,Scalar(0, 255, 0), -1);
+    ROS_ERROR("depthCallback exception: %s", e.what());
   }
-
-  // put text info
-  resize(depthColorImg, depthColorImg, depthSize);
-  Point pos(20, 40);
-  Scalar textColor(100, 100, 0);
-  string text("linear: ");
-  text.append(boost::lexical_cast<string>(linearSpeed));
-  putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
-  pos.y += 20;
-  text = "angular: ";
-  text.append(boost::lexical_cast<string>(angularSpeed));
-  putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
-  pos.y += 20;
-  text = "time: ";
-  text.append(boost::lexical_cast<string>(ros::Time::now()));
-  putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
-
-  if (isViewVideo)
-  {
-    imshow("center", depthColorImg);
-    waitKey(10);
-  }
-  if (isSaveVideo)
-    depthWriter << depthColorImg;
-
-  // pub message
-  if (paused)
-    return;
-  geometry_msgs::Twist moveCmd;
-  moveCmd.linear.x = linearSpeed;
-  moveCmd.angular.z = angularSpeed;
-  cmdVelPub.publish(moveCmd);
 }
 
 void rgbCallback(const sensor_msgs::Image::ConstPtr& msg)
@@ -180,21 +187,28 @@ void rgbCallback(const sensor_msgs::Image::ConstPtr& msg)
     ROS_ERROR("cv_bridge exception: %s", e.what());
   }
 
-  // put time
-  Point pos(20, 40);
-  Scalar textColor(0, 0, 255);
-  string text("time: ");
-  text.append(boost::lexical_cast<string>(ros::Time::now()));
-  putText(rgbImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
-
-  // display or save video
-  if (isViewVideo)
+  try
   {
-    imshow("color image", rgbImg);
-    waitKey(10);
+    // put time
+    Point pos(20, 40);
+    Scalar textColor(0, 0, 255);
+    string text("time: ");
+    text.append(boost::lexical_cast<string>(ros::Time::now()));
+    putText(rgbImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
+
+    // display or save video
+    if (isViewVideo)
+    {
+      imshow("color image", rgbImg);
+      waitKey(10);
+    }
+    if (isSaveVideo)
+      rgbWriter << rgbImg;
   }
-  if (isSaveVideo)
-    rgbWriter << rgbImg;
+  catch (Exception e)
+  {
+    ROS_ERROR("rgbCallback exception: %s", e.what());
+  }
 }
 
 int main(int argc, char **argv)
@@ -208,13 +222,13 @@ int main(int argc, char **argv)
   cmdVelPub = node.advertise<geometry_msgs::Twist>("/goal_vel", 100);
 
   // get params
-  ROS_INFO("follower2 get params:");
+  ROS_INFO("follower3 get params:");
   paused = node.getParamEx("follower3/paused", false);
   maxLinear = node.getParamEx("follower3/maxLinear", 0.5);
   maxAngular = node.getParamEx("follower3/maxAngular", 2.0);
   goalZ = node.getParamEx("follower3/goalZ", 600);
   maxZ = node.getParamEx("follower3/maxZ", 900);
-  maxWeight = node.getParamEx("follower3/maxWeight", 10.0);
+  maxWeight = node.getParamEx("follower3/maxWeight", 3.0);
   minPoints = node.getParamEx("follower3/minPoints", 1000);
   linearRespRate = node.getParamEx("follower3/linearRespRate", 1.0);
   angularRespRate = node.getParamEx("follower3/angularRespRate", 1.0);
@@ -222,7 +236,7 @@ int main(int argc, char **argv)
   isSaveVideo = node.getParamEx("follower3/isSaveVideo", true);
   string histVideoPath = node.getParamEx("follower3/histVideoPath", "follower3_histogram.avi");
   string depthVideoPath = node.getParamEx("follower3/depthVideoPath", "follower3_depth.avi");
-  string rgbVideoPath = node.getParamEx("follower3/depthVideoPath", "follower3_rgb.avi");
+  string rgbVideoPath = node.getParamEx("follower3/rgbVideoPath", "follower3_rgb.avi");
 
   try
   {
