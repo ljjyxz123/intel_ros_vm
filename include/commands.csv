@@ -12,10 +12,14 @@
 11,slower,slower,Speed down!
 12,turn left,turn left,turn left
 13,turn right,turn right,turn right
-14,forward,go ahead,forward
+14,go straight,go straight,go straight
 15,backward,back,back
 16,rotate left,rotate left,rotate left
 17,rotate right,rotate right,rotate right
 18,reset speed,reset speed,Speed reseted!
-19,hello,hello,"Hello, I am a ExBot!"
-20,time,what is the time,what time?
+19,hello,hello,"Hello, I am ExBot!"
+20,go your self,go your self,"go ahead, do not block me!"
+21,time,what is the time,null
+22,time,what time,null
+23,date,what is the date,null
+24,date,what date,null

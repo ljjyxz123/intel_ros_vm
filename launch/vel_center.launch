@@ -10,9 +10,9 @@
     <param name="maxAdjustLinear" type="double" value="0.4" />
     <param name="maxAdjustAngular" type="double" value="1.5" />
     <!-- default 0.25 -->
-    <param name="linearAccelerate" type="double" value="0.75" />
+    <param name="linearAccelerate" type="double" value="0.5" />
     <!-- default 1 -->
-    <param name="angularAccelerate" type="double" value="4" />
+    <param name="angularAccelerate" type="double" value="2" />
     <param name="rate" type="int" value="10" />
   </node>
 </launch>

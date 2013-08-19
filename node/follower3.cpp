@@ -17,6 +17,7 @@ double maxLinear;
 double maxAngular;
 double linearRespRate, angularRespRate;
 double maxWeight;
+int weightMarggin;
 bool isViewVideo;
 bool isSaveVideo;
 double linearSpeed = 0;
@@ -67,14 +68,27 @@ void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
     float range[2] = {0, maxZ};
     vector<int> hist = util.calcHist(depthImg, histSize.width / 2, range);
     Mat histogram = util.drawHist(hist, histSize.height, 2);
+
+    cvtColor(histogram, histogram, CV_GRAY2BGR);
+    Point pos(5, 20);
+    Scalar textColor(0, 255, 255);
+    string text("time: ");
+    text.append(boost::lexical_cast<string>(ros::Time::now()));
+    putText(histogram, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
     if (isViewVideo)
       imshow("hist", histogram);
     if (isSaveVideo)
     {
-      cvtColor(histogram, histogram, CV_GRAY2BGR);
       histWriter << histogram;
     }
+  }
+  catch (Exception& e)
+  {
+    ROS_ERROR("follower histogram exception: %s", e.what());
+  }
 
+  try
+  {
     // weight
     int maxRange = maxZ;
     Mat_<float> wMat(rows, cols); // weight mat
@@ -87,13 +101,13 @@ void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
     {
       uint16_t* pDepthRow = depthImg.ptr<uint16_t>(i);
       float* pwMatRow = wMat.ptr<float>(i);
-      for (int j = 0; j < cols; j++)
+      for (int j = weightMarggin; j < cols - weightMarggin; j++)
       {
         int z = pDepthRow[j]; // depth of current point
         double w = 0; // weight of current point
         if (z < maxRange) // if z in the range, calc the w
         {
-          w = (1 - (double)pDepthRow[j] / maxRange) * 10;
+          w = (1 - (double)pDepthRow[j] / maxRange) * maxWeight;
           pwMatRow[j] = w;
           wSum += w;
           xSum += j * w;
@@ -112,7 +126,10 @@ void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
     float depthRange[2] = {0, 900};
     bool discard[2] = {false, true};
     bool depthChannals[3] = {false, false, true};
-    util.depth2Color(depthImg, depthColorImg, depthRange, discard, depthChannals);
+    Rect roiRect = Rect(weightMarggin, 0, depthColorImg.cols - 2*weightMarggin, depthColorImg.rows);
+    Mat depthRoi = depthImg(roiRect);
+    Mat depthColorRoi = depthColorImg(roiRect);
+    util.depth2Color(depthRoi, depthColorRoi, depthRange, discard, depthChannals);
 
     // control
     float centerX = cols / 2;
@@ -138,17 +155,17 @@ void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
     // put text info
     resize(depthColorImg, depthColorImg, depthSize);
     Point pos(20, 40);
-    Scalar textColor(100, 100, 0);
-    string text("linear: ");
+    Scalar textColor(0, 200, 0);
+    string text("time: ");
+    text.append(boost::lexical_cast<string>(ros::Time::now()));
+    putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
+    pos.y += 20;
+    text = "linear: ";
     text.append(boost::lexical_cast<string>(linearSpeed));
     putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
     pos.y += 20;
     text = "angular: ";
     text.append(boost::lexical_cast<string>(angularSpeed));
-    putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
-    pos.y += 20;
-    text = "time: ";
-    text.append(boost::lexical_cast<string>(ros::Time::now()));
     putText(depthColorImg, text, pos, FONT_HERSHEY_SIMPLEX, 0.6, textColor);
 
     if (isViewVideo)
@@ -167,9 +184,9 @@ void depthCallback(const sensor_msgs::Image::ConstPtr& msg)
     moveCmd.angular.z = angularSpeed;
     cmdVelPub.publish(moveCmd);
   }
-  catch (Exception e)
+  catch (Exception& e)
   {
-    ROS_ERROR("depthCallback exception: %s", e.what());
+    ROS_ERROR("follower depthCallback exception: %s", e.what());
   }
 }
 
@@ -205,7 +222,7 @@ void rgbCallback(const sensor_msgs::Image::ConstPtr& msg)
     if (isSaveVideo)
       rgbWriter << rgbImg;
   }
-  catch (Exception e)
+  catch (Exception& e)
   {
     ROS_ERROR("rgbCallback exception: %s", e.what());
   }
@@ -228,15 +245,16 @@ int main(int argc, char **argv)
   maxAngular = node.getParamEx("follower3/maxAngular", 2.0);
   goalZ = node.getParamEx("follower3/goalZ", 600);
   maxZ = node.getParamEx("follower3/maxZ", 900);
-  maxWeight = node.getParamEx("follower3/maxWeight", 3.0);
+  maxWeight = node.getParamEx("follower3/maxWeight", 8.0);
+  weightMarggin = node.getParamEx("follower3/weightMarggin", 50);
   minPoints = node.getParamEx("follower3/minPoints", 1000);
   linearRespRate = node.getParamEx("follower3/linearRespRate", 1.0);
-  angularRespRate = node.getParamEx("follower3/angularRespRate", 1.0);
+   angularRespRate = node.getParamEx("follower3/angularRespRate", 1.0);
   isViewVideo = node.getParamEx("follower3/isViewVideo", true);
   isSaveVideo = node.getParamEx("follower3/isSaveVideo", true);
-  string histVideoPath = node.getParamEx("follower3/histVideoPath", "follower3_histogram.avi");
-  string depthVideoPath = node.getParamEx("follower3/depthVideoPath", "follower3_depth.avi");
-  string rgbVideoPath = node.getParamEx("follower3/rgbVideoPath", "follower3_rgb.avi");
+  string histVideoPath = node.getParamEx("follower3/histVideoPath", "histogram.avi");
+  string depthVideoPath = node.getParamEx("follower3/depthVideoPath", "follower.avi");
+  string rgbVideoPath = node.getParamEx("follower3/rgbVideoPath", "rgb.avi");
 
   try
   {

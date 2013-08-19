@@ -130,20 +130,24 @@ void loadCommandsFile(std::string path)
   ROS_INFO("Loaded [%d] commands.", commands.size());
 }
 
-long msec = 0;
+int sec = 0;
 std::string cmd;
 // skip the duplicate command in 2 secs. check success will return true
 bool checkCmd(std::string tcmd)
 {
-  long tmsec = clock() / 1000;
-  if (cmd == tcmd && tmsec - msec < 2000)
+  int tsec = ros::Time::now().sec;
+  if (tsec - sec < 2)
+  {
+    std_msgs::String response;
+    response.data = "Reject commands " + tcmd;
+    speaker.publish(response);
     return false;
+  }
   cmd = tcmd;
-  msec = tmsec;
+  sec = tsec;
   std_msgs::String response;
   response.data = commands.find(tcmd)->second;
   speaker.publish(response);
-
   return true;
 }
 
@@ -182,9 +186,9 @@ void recogCallback(const std_msgs::String::ConstPtr& msg)
   {
     if (checkCmd("stop"))
     {
+      pubAuthor("center");
       pubGoalVel(0, 0);
       pubAdjustVel(0, 0);
-      pubAuthor("center");
     }
   }
   else if (cmd == "follow me")
@@ -192,6 +196,12 @@ void recogCallback(const std_msgs::String::ConstPtr& msg)
     if (checkCmd("follow me"))
       pubAdjustVel(0, 0);
       pubAuthor("follower");
+  }
+  else if (cmd == "go your self")
+  {
+    if (checkCmd("go your self"))
+      pubAdjustVel(0, 0);
+      pubAuthor("avoidance");
   }
   else if (cmd == "slower")
   {
@@ -247,9 +257,9 @@ void recogCallback(const std_msgs::String::ConstPtr& msg)
     return;
   else
     skipFlag = true;
-  if (cmd == "forward")
+  if (cmd == "go straight")
   {
-    if (checkCmd("forward"))
+    if (checkCmd("go straight"))
     {
       pubGoalVel(linearSpeed, 0);
       pubAdjustAngular(0);
