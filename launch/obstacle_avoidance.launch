@@ -1,0 +1,23 @@
+<!-- Yuanbo She, 2013.8.19 -->
+<launch>
+  <node pkg="intel_ros_vm" name="obstacle_avoidance" type="obstacle_avoidance" output="screen" >
+    <param name="paused" type="bool" value="true" />
+    <param name="maxLinear" type="double" value="0.2" />
+    <param name="maxAngular" type="double" value="1.0" />
+    <param name="linearRespRate" type="double" value="1.0" />
+    <param name="angularRespRate" type="double" value="1.0" />
+    <param name="goalRotationDepth" type="int" value="450" />
+    <param name="goalFrontDepth" type="int" value="450" />
+    <param name="minRotationPoints" type="int" value="50" />
+    <param name="maxRotationDepth" type="int" value="800" />
+    <param name="minFrontPoints" type="int" value="300" />
+    <param name="maxFrontDepth" type="int" value="1000" />
+    <param name="frontWidth" type="int" value="300" />
+    <param name="frontHeight" type="int" value="40" />
+    <param name="rotationWidth" type="int" value="100" />
+    <param name="rotationHeight" type="int" value="60" />
+    <param name="isViewVideo" type="bool" value="true" />
+    <param name="isSaveVideo" type="bool" value="true" />
+    <param name="depthVideoPath" type="string" value="/home/viki/obstacle_avoidance.avi" />
+  </node>
+</launch>
